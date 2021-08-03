@@ -1,6 +1,6 @@
 //code taken from https://courses.cs.duke.edu/spring11/cps100e/assign/huff/code/BitOutputStream.html
 
-package LZW;
+package LZW.Compressor;
 
 import java.io.*;
 

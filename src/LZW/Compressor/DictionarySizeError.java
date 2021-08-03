@@ -1,4 +1,4 @@
-package LZW;
+package LZW.Compressor;
 
 public class DictionarySizeError extends Exception
 {

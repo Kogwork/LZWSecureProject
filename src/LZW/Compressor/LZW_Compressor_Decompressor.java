@@ -1,10 +1,7 @@
-package LZW;
+package LZW.Compressor;
 
 import java.io.*;
-import java.util.Date;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.TimerTask;
 
 /**
  * Assignment 1
@@ -19,7 +16,7 @@ import java.util.TimerTask;
 
 public class LZW_Compressor_Decompressor implements Compressor {
 
-    protected int m_SizeOfDictionaryElementInBits = 18;
+    protected int m_SizeOfDictionaryElementInBits = 22;
     private int m_DefaultDictionarySize = 256;
 
     public LZW_Compressor_Decompressor() {
@@ -64,10 +61,9 @@ public class LZW_Compressor_Decompressor implements Compressor {
             outputBit = new BitOutputStream(new FileOutputStream(input_names[1]));
 
             while (true) {
-                if (nextFreeKeyInHashMap == (Math.pow(2, m_SizeOfDictionaryElementInBits) / 10) * loadingCounter)
+                if (nextFreeKeyInHashMap == (Math.pow(2, m_SizeOfDictionaryElementInBits)))
                 {
-                    System.out.println("[COMPRESSING] progress is " + 10*loadingCounter + "% Done");
-                    loadingCounter++;
+                    System.out.println("[COMPRESSING] ERROR DICTINOARY SIZE");
                 }
                 /*
 
@@ -93,52 +89,15 @@ public class LZW_Compressor_Decompressor implements Compressor {
                 }
             }
             outputBit.writeBits(m_SizeOfDictionaryElementInBits,Integer.valueOf(dictionary.get(String_inputValueCurrent)));
-            outputBit.writeBits(m_SizeOfDictionaryElementInBits,Integer.valueOf(dictionary.get(String_inputValueCurrent)));
+            outputBit.writeBits(8,Integer.valueOf(dictionary.get(String_inputValueCurrent)));
+
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
     }
-    //saves default 256 values in the dictionary
-    /*
-    private void InitalizeDictionaryWithDefaultValues(HashMap<String, String> dictionary) {
 
-        for(int i = 0; i < m_DefaultDictionarySize; i++){
-            dictionary.put(padBinaryValue(i), Integer.toString(i));
-        }
-
-    }
-
-
-    private Char padBinaryValue(int i_BinaryIntToPad) {
-
-        Char PaddedString = Integer.toBinaryString(i_BinaryIntToPad);
-
-        while(PaddedString.length() < m_SizeOfDictionaryElementInBits)
-        {
-            PaddedString = "0" + PaddedString;
-        }
-        return PaddedString;
-    }
-    /*
-        string entry;
-        char ch;
-        int prevcode, currcode;
-        ...
-
-        prevcode = read in a code;
-        decode/output prevcode;
-        while (there is still data to read)
-        {
-         currcode = read in a code;
-         entry = translation of currcode from dictionary;
-         output entry;
-         ch = first char of entry;
-         add ((translation of prevcode)+ch) to dictionary;
-         prevcode = currcode;
-    }
-     */
     @Override
     public void Decompress(String[] input_names, String[] output_names) {
 
@@ -165,8 +124,11 @@ public class LZW_Compressor_Decompressor implements Compressor {
 
             int_getValueFromHashMap = (inputBit.readBits(m_SizeOfDictionaryElementInBits)); //000000000101010110111
             inputValueCurrent = DecompressedDictionary.get(String.valueOf(int_getValueFromHashMap));
-            outputBit.writeBits(8, inputValueCurrent.charAt(0));
-
+            try {
+                outputBit.writeBits(8, inputValueCurrent.charAt(0));
+            }catch(NullPointerException e){
+                System.out.println("File was compressed with a different bit size.");
+            }
 
             while (true)
             {
