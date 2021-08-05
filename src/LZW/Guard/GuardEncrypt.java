@@ -7,6 +7,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -49,9 +50,13 @@ public class GuardEncrypt {
             outputStream.close();
 
         } catch (NoSuchPaddingException | NoSuchAlgorithmException
-                | InvalidKeyException | BadPaddingException
+                |  BadPaddingException
                 | IllegalBlockSizeException | IOException ex) {
             throw new GuardExecption("[Guard] Has run into a problem.", ex);
+        } catch (InvalidKeyException e){
+            JFrame wrong=new JFrame();
+            JOptionPane.showMessageDialog(wrong,"Password is incorrect, double check it.","Wrong Password",JOptionPane.WARNING_MESSAGE);
+            throw new GuardExecption("[Guard] Has run into a problem.", e);
         }
     }
 }

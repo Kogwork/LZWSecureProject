@@ -23,15 +23,14 @@ public class Runner {
 	}
 
 	static boolean activateGuard = false;
-	static String password = padPassword("123");
+	static String password = padPassword("1010101010101010");
 	static LZW_Compressor_Decompressor hed = new LZW_Compressor_Decompressor();
 	static String[] IN_FILE_PATH = new String[]{"",""};
 	static String[] OUT_FILE_PATH = new String[]{""};
 	static String[] ENCRYPTED_FILE_PATH = new String[]{""};
 
-	public static void main(String[] args) {
-	}
 	public static void RunCompress() throws GuardExecption {
+		LZWGuardGUI.itemCounter = 0;
 		LZWGuardGUI.loading.setVisible(true);
 		File theDir = new File("..\\Protected_LZW_318503257_205580087\\CompressedFiles");
 		if (!theDir.exists()){
@@ -47,7 +46,6 @@ public class Runner {
 					CompressGuarded();
 				} else
 					Compress();
-				LZWGuardGUI.loading.setText(FileName + "is compressing...");
 			}else
 				LZWGuardGUI.DnDField.setText("Some of the files are already compressed...");
 		}
@@ -55,7 +53,9 @@ public class Runner {
 
 	}
 	public static void RunDecompress() throws GuardExecption {
+
 		LZWGuardGUI.loading.setVisible(true);
+		LZWGuardGUI.itemCounter = 0;
 
 		File theDir = new File("..\\Protected_LZW_318503257_205580087\\DecompressedFiles");
 		if (!theDir.exists()){
@@ -76,7 +76,6 @@ public class Runner {
 				}
 				Decompress();
 
-				LZWGuardGUI.loading.setText(FileName + "is Decompressing...");
 			}else LZWGuardGUI.DnDField.setText("Some of the files are not compressed...");
 		}
 		LZWGuardGUI.loading.setText("Decompressing is done!");
@@ -105,13 +104,9 @@ public class Runner {
 	}
 
 	public static void CompressGuarded() throws GuardExecption {
-		File theDir = new File("..\\Protected_LZW_318503257_205580087\\GuardCompressedFiles");
-		if (!theDir.exists()){
-			theDir.mkdirs();
-		}
 		hed.Compress(IN_FILE_PATH, OUT_FILE_PATH);
 		File inputFile = new File((IN_FILE_PATH[1]));
-		ENCRYPTED_FILE_PATH[0] = "..\\Protected_LZW_318503257_205580087\\GuardCompressedFiles\\" + inputFile.getName() + ".guard";
+		ENCRYPTED_FILE_PATH[0] = "..\\Protected_LZW_318503257_205580087\\CompressedFiles\\" + inputFile.getName() + ".guard";
 		File encryptedFile = new File(ENCRYPTED_FILE_PATH[0]);
 		GuardEncrypt.encrypt(password, inputFile, encryptedFile);
 	}
@@ -120,7 +115,7 @@ public class Runner {
 		try {
 			File inputFile = new File((IN_FILE_PATH[1]));
 
-			ENCRYPTED_FILE_PATH[0] = "..\\Protected_LZW_318503257_205580087\\GuardCompressedFiles\\" + inputFile.getName();
+			ENCRYPTED_FILE_PATH[0] = "..\\Protected_LZW_318503257_205580087\\CompressedFiles\\" + inputFile.getName();
 
 			File encryptedFile = new File(ENCRYPTED_FILE_PATH[0]);
 
@@ -130,8 +125,6 @@ public class Runner {
 
 			IN_FILE_PATH[1] = "..\\Protected_LZW_318503257_205580087\\CompressedFiles\\" + inputFile.getName().replace(".guard", "");
 
-		}catch (GuardExecption e){
-			LZWGuardGUI.DnDField.setText("Seems like you're trying to decrypt a file that is not encrypted, make sure to disable guard...");
-		}
+		}catch (GuardExecption e){ }
 	}
 }

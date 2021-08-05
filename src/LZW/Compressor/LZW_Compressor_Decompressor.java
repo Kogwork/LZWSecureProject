@@ -1,43 +1,33 @@
 package LZW.Compressor;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.HashMap;
 
 /**
- * Assignment 1
+ * LZW PASSWORD PROTECTED PROJECT
  * Submitted by:
- * Student 1. 	ID# XXXXXXXXX
- * Student 2. 	ID# XXXXXXXXX
+ * Student 1: 	DANNY KOGEL 318503257
+ * Student 2. 	ALEX BREGER 205580087
  */
-
-// Uncomment if you wish to use FileOutputStream and FileInputStream for file access.
-//import java.io.FileOutputStream;
-//import java.io.FileInputStream;
 
 public class LZW_Compressor_Decompressor implements Compressor {
 
-    protected int m_SizeOfDictionaryElementInBits = 22;
+    protected static int m_SizeOfDictionaryElementInBits = 22;
+
+    public static int getM_SizeOfDictionaryElementInBits() {
+        return m_SizeOfDictionaryElementInBits;
+    }
+
+    public static void setM_SizeOfDictionaryElementInBits(int m_SizeOfDictionaryElementInBitsCurr) {
+        m_SizeOfDictionaryElementInBits = m_SizeOfDictionaryElementInBitsCurr;
+    }
     private int m_DefaultDictionarySize = 256;
 
     public LZW_Compressor_Decompressor() {
 
     }
 
-    /*
-    w = NIL;
-    while ( read a character k )
-        {
-         if wk exists in the dictionary
-             w = wk;
-         else
-         {
-            add wk to the dictionary;
-            output the code for w;
-            w = k;
-          }
-        }
-
-     */
     @Override
     public void Compress(String[] input_names, String[] output_names)
     {
@@ -53,26 +43,24 @@ public class LZW_Compressor_Decompressor implements Compressor {
         char char_temporaryCharacterToConcatenate;
         String String_inputValueCurrent = "";
         int nextFreeKeyInHashMap = m_DefaultDictionarySize;
-        int loadingCounter = 1;
 
         try
         {
-            inputBit = new BitInputStream(new FileInputStream(input_names[0]));
+            try {
+                inputBit = new BitInputStream(new FileInputStream(input_names[0]));
+            }catch (FileNotFoundException e){
+                JFrame notFound = new JFrame();
+                JOptionPane.showMessageDialog(notFound,"There was a problem locating a file","Alert",JOptionPane.WARNING_MESSAGE);
+
+            }
             outputBit = new BitOutputStream(new FileOutputStream(input_names[1]));
 
             while (true) {
                 if (nextFreeKeyInHashMap == (Math.pow(2, m_SizeOfDictionaryElementInBits)))
                 {
-                    System.out.println("[COMPRESSING] ERROR DICTINOARY SIZE");
-                }
-                /*
-
-                if (nextFreeKeyInHashMap == Math.pow(2,m_SizeOfDictionaryElementInBits))
-                {
-                    throw new DictionarySizeError("[ERROR] Dictionary size is insufficient : " + Math.pow(2,m_SizeOfDictionaryElementInBits) );
+                    System.out.println("[COMPRESSING] ERROR DICTIONARY SIZE");
                 }
 
-                 */
                 char_temporaryCharacterToConcatenate = (char)inputBit.readBits(8); //000000000101010110111
                 if(char_temporaryCharacterToConcatenate=='\uFFFF')
                 {
@@ -92,7 +80,7 @@ public class LZW_Compressor_Decompressor implements Compressor {
             outputBit.writeBits(8,Integer.valueOf(dictionary.get(String_inputValueCurrent)));
 
         }
-        catch (IOException e)
+        catch (IOException | NullPointerException e)
         {
             e.printStackTrace();
         }
@@ -132,6 +120,7 @@ public class LZW_Compressor_Decompressor implements Compressor {
 
             while (true)
             {
+                try {
                 int_getValueFromHashMap = (inputBit.readBits(m_SizeOfDictionaryElementInBits));
                 if(int_getValueFromHashMap==-1)
                 {
@@ -148,9 +137,11 @@ public class LZW_Compressor_Decompressor implements Compressor {
                     DecompressedDictionary.put(Integer.toString(nextFreeKeyInHashMap++),inputValueCurrent + inputValueCurrent.charAt(0));
                     inputValueCurrent = DecompressedDictionary.get(String.valueOf(int_getValueFromHashMap));
                 }
-                for (char ch: inputValueCurrent.toCharArray()) {
-                    outputBit.writeBits(8,ch);
-                }
+
+                    for (char ch : inputValueCurrent.toCharArray()) {
+                        outputBit.writeBits(8, ch);
+                    }
+                }catch (NullPointerException e) {}
             }
         }
         catch (IOException e)
