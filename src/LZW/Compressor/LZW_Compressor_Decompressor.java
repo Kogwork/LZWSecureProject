@@ -51,17 +51,16 @@ public class LZW_Compressor_Decompressor implements Compressor {
             }catch (FileNotFoundException e){
                 JFrame notFound = new JFrame();
                 JOptionPane.showMessageDialog(notFound,"There was a problem locating a file","Alert",JOptionPane.WARNING_MESSAGE);
-
             }
             outputBit = new BitOutputStream(new FileOutputStream(input_names[1]));
 
             while (true) {
                 if (nextFreeKeyInHashMap == (Math.pow(2, m_SizeOfDictionaryElementInBits)))
                 {
-                    System.out.println("[COMPRESSING] ERROR DICTIONARY SIZE");
+                    throw new DictionarySizeError("[COMPRESSING] ERROR DICTIONARY SIZE");
                 }
 
-                char_temporaryCharacterToConcatenate = (char)inputBit.readBits(8); //000000000101010110111
+                char_temporaryCharacterToConcatenate = (char)inputBit.readBits(8);
                 if(char_temporaryCharacterToConcatenate=='\uFFFF')
                 {
                     break;
@@ -80,7 +79,7 @@ public class LZW_Compressor_Decompressor implements Compressor {
             outputBit.writeBits(8,Integer.valueOf(dictionary.get(String_inputValueCurrent)));
 
         }
-        catch (IOException | NullPointerException e)
+        catch (IOException | NullPointerException | DictionarySizeError e)
         {
             e.printStackTrace();
         }
@@ -110,7 +109,7 @@ public class LZW_Compressor_Decompressor implements Compressor {
             outputBit = new BitOutputStream(new FileOutputStream(output_names[0]));
 
 
-            int_getValueFromHashMap = (inputBit.readBits(m_SizeOfDictionaryElementInBits)); //000000000101010110111
+            int_getValueFromHashMap = (inputBit.readBits(m_SizeOfDictionaryElementInBits));
             inputValueCurrent = DecompressedDictionary.get(String.valueOf(int_getValueFromHashMap));
             try {
                 outputBit.writeBits(8, inputValueCurrent.charAt(0));

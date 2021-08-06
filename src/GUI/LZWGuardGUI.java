@@ -3,9 +3,7 @@ import LZW.*;
 import LZW.Compressor.LZW_Compressor_Decompressor;
 import LZW.Guard.GuardExecption;
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.plaf.basic.BasicMenuUI;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
@@ -16,26 +14,32 @@ import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 public class LZWGuardGUI {
 
-    public static int m_defaultBitSize = 22;
     public static JTextField DnDField = new JTextField(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
-    public static String FilePath = "";
     public static JLabel loading = new JLabel();
+    public static String FilePath = "";
     public static int itemCounter = 0;
+    public static int m_defaultBitSize = 22;
+    public static int const_maxPasswordLength = 16;
 
     public static void main(String[] args) {
+
+        //init the main frame for the gui
+        JFrame mainJFrame= new JFrame("Guard LZW");
+
+        //checks for the nimbus look for the gui
         try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -45,16 +49,41 @@ public class LZWGuardGUI {
             }
         } catch (Exception e) {}
 
-        JFrame mainJFrame= new JFrame("Guard LZW");
+        //DRAG AND DROP FIELD LOGIC + Counter label
+        JLabel itemCounterLabel = new JLabel("No loaded Files");
+        itemCounterLabel.setBounds(685,110, 200,40);
+        DnDField.setBounds(100,50, 750,50);
+        DnDField.setDropTarget(new DropTarget() {
+            public void drop(DropTargetDropEvent draggedFile) {
+                try {
+                    draggedFile.acceptDrop(DnDConstants.ACTION_COPY);
+                    List<File> userDroppedFiles = (List<File>) draggedFile.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                    for (File file : userDroppedFiles) {
+                        FilePath = FilePath + " ➕ " + file.getPath();
+                        Runner.inputSourceQueue.add(file.getPath());
+                        Runner.FileQueue.add(file.getName());
+                        itemCounterLabel.setText("Number of items Loaded: " + ++itemCounter);
+                    }
+                    DnDField.setText(FilePath);
+                    draggedFile.dropComplete(true);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
-        JPasswordField GuardPassword = new JPasswordField(16);
-        PlainDocument document = (PlainDocument) GuardPassword.getDocument();
         //source https://www.tutorialspoint.com/how-to-restrict-the-number-of-digits-inside-jpasswordfield-in-java
+        //Checks that no more than 16 chars are entered to the password field,
+
+        JPasswordField GuardPassword = new JPasswordField(const_maxPasswordLength);
+        GuardPassword.setVisible(false);
+        GuardPassword.setToolTipText("Make to sure to remember the password used, It's impossible to restore it");
+        PlainDocument document = (PlainDocument) GuardPassword.getDocument();
         document.setDocumentFilter(new DocumentFilter() {
             @Override
             public void replace(DocumentFilter.FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
                 String passwordCurrentString = fb.getDocument().getText(0, fb.getDocument().getLength()) + text;
-                if (passwordCurrentString.length() <= 16) {
+                if (passwordCurrentString.length() <= const_maxPasswordLength) {
                     super.replace(fb, offset, length, text, attrs);
                 }
                 if(passwordCurrentString.length()==0){
@@ -64,47 +93,41 @@ public class LZWGuardGUI {
             }
         });
 
-
-        GuardPassword.setToolTipText("Make to sure to remember the password used, It's impossible to restore it");
+        //Buttons for compress and decompress, also loading label
+        loading.setBounds(360,230,400,30);
         JButton compressButton=new JButton("\uD83D\uDCD4 Compress");
-        loading.setBounds(380,200,200,30);
-
-        compressButton.setBounds(200,200,120,30);
+        compressButton.setBounds(150,230,120,30);
         compressButton.addActionListener(e -> {
-            loading.setText("Compressing...");
+            loading.setVisible(true);
+            loading.setText("      Compressing...⏳");
             itemCounter = 0;
             try {
                 Runner.RunCompress();
             } catch (GuardExecption guardExecption) {
                 guardExecption.printStackTrace();
             }
-        });
-
-        compressButton.addActionListener(event ->{
-            DnDField.setText(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
             FilePath = "";
+            DnDField.setText(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
         });
 
         JButton decompressButton=new JButton("\uD83D\uDD6E Decompress");
-        decompressButton.setBounds(580,200,120,30);
+        decompressButton.setBounds(680,230,120,30);
         decompressButton.addActionListener(e -> {
-            loading.setText("Decompressing...");
+            loading.setVisible(true);
+            loading.setText("      Decompressing...⏳");
             itemCounter = 0;
             try {
                 Runner.RunDecompress();
             } catch (GuardExecption guardExecption) {
                 guardExecption.printStackTrace();
             }
-        });
-
-        decompressButton.addActionListener(event -> {
-            DnDField.setText(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
             FilePath = "";
-
+            DnDField.setText(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
         });
 
-        GuardPassword.setVisible(false);
+        //Guard checkbox and label
         JLabel labelGuard = new JLabel("\uD83D\uDD12 Guard™");
+        labelGuard.setToolTipText("This will allow you to choose a password\n and your compressed files will be encrypted using AES 128-bit Encryption.");
         JCheckBox checkbox = new JCheckBox();
         checkbox.addActionListener(event -> {
             JCheckBox cb = (JCheckBox) event.getSource();
@@ -118,28 +141,8 @@ public class LZWGuardGUI {
                 Runner.setActivateGuard(false);
             }
         });
-        labelGuard.setToolTipText("This will allow you to choose a password\n and your compressed files will be encrypted using AES 128-bit Encryption.");
 
-        JLabel itemCounterLabel = new JLabel("No loaded Files");
-        DnDField.setDropTarget(new DropTarget() {
-            public synchronized void drop(DropTargetDropEvent evt) {
-                try {
-                    evt.acceptDrop(DnDConstants.ACTION_COPY);
-                    List<File> droppedFiles = (List<File>) evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
-                    for (File file : droppedFiles) {
-                        FilePath = FilePath + " ➕ " + file.getPath();
-                        Runner.inputSourceQueue.add(file.getPath());
-                        Runner.FileQueue.add(file.getName());
-                        itemCounterLabel.setText("Number of items Loaded: " + ++itemCounter);
-                    }
-                    DnDField.setText(FilePath);
-                    evt.dropComplete(true);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
+        //GITHUB MENU
         JMenu main = new JMenu("GitHub");
         JMenuBar mainBar = new JMenuBar();
         JMenuItem github1 = new JMenuItem(new AbstractAction("Kogwork") {
@@ -164,15 +167,19 @@ public class LZWGuardGUI {
                 }
             }
         });
+
+        //"HELP" MENU
         JMenu help = new JMenu("Help");
         JMenuItem quickStart = new JMenuItem(new AbstractAction("Quick Start") {
             public void actionPerformed(ActionEvent e) {
                 JFrame quick=new JFrame();
-                JOptionPane.showMessageDialog(quick,"Thank you for using Guard™!" +
-                        "\nTo compress your files, just drag and drop them in the allocated field." +
-                        "\nIf you wish to Encrypt them using a password, check the Guard™ checkbox\n" +
-                        "and choose a password up to 16 digits long, You'll need it to decrypt the files as well" +
-                        "\nso keep it in a safe place. Encrypted files are ended with .guard\nand compressed ones will have .lzw at the end.","Quick Start",JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(quick, """
+                        Thank you for using Guard™!
+                        To compress your files, just drag and drop them in the allocated field.
+                        If you wish to Encrypt them using a password, check the Guard™ checkbox
+                        and choose a password up to 16 digits long, You'll need it to decrypt the files as well
+                        so keep it in a safe place. Encrypted files are ended with .guard
+                        and compressed ones will have .lzw at the end.""","Quick Start",JOptionPane.PLAIN_MESSAGE);
             }
         });
         JMenuItem forgotPassword = new JMenuItem(new AbstractAction("Forgot Password") {
@@ -181,13 +188,17 @@ public class LZWGuardGUI {
                 JOptionPane.showMessageDialog(quick,"TOO BAD!\nIt's impossible to restore the password used, next time keep them in a safe place.","Forgot Password",JOptionPane.WARNING_MESSAGE);
             }
         });
+
+        //BITSIZE SELECTION MENU
         JMenu bitSize = new JMenu("BitSize");
         JMenuItem bitSizeChange = new JMenuItem(new AbstractAction("Change Bit Size") {
             public void actionPerformed(ActionEvent e) {
                 JFrame bitSizeFrame = new JFrame("Change BitSize");
-                int a=JOptionPane.showConfirmDialog(bitSizeFrame,"Changing BitSize will make it impossible to decompress\n " +
-                        "files compressed with different BitSize, but will allow compressing bigger files,\n also may affect compressing times, you sure?");
-                if(a==JOptionPane.YES_OPTION){
+                int infoPopUpWindow =JOptionPane.showConfirmDialog(bitSizeFrame, """
+                        Changing BitSize will make it impossible to decompress
+                        files compressed with different BitSize, but will allow compressing bigger files,
+                        also may affect compressing times, are you sure?""");
+                if(infoPopUpWindow ==JOptionPane.YES_OPTION){
                     JLabel currentBitSize = new JLabel();
                     JSlider bitSlider;
                     JPanel bitPanel = new JPanel();
@@ -206,6 +217,7 @@ public class LZWGuardGUI {
                         LZW_Compressor_Decompressor.setM_SizeOfDictionaryElementInBits(bitSlider.getValue());
                         bitSizeFrame.dispatchEvent(new WindowEvent(bitSizeFrame, WindowEvent.WINDOW_CLOSING));
                     });
+
                     JButton bitButtonDefault =new JButton("Default");
                     bitButtonDefault.setBounds(50,200,95,30);
                     bitButtonDefault.addActionListener(e12 -> {
@@ -213,6 +225,7 @@ public class LZWGuardGUI {
                         bitSlider.setValue(m_defaultBitSize);
                         currentBitSize.setText("Bit Size: " + m_defaultBitSize + "  ");
                     });
+
                     bitSlider.addChangeListener(slider);
                     bitPanel.add(currentBitSize);
                     bitPanel.add(bitButton);
@@ -222,12 +235,13 @@ public class LZWGuardGUI {
                     bitSizeFrame.setSize(300, 150);
                     bitSizeFrame.show();
 
-                }else if(a==JOptionPane.NO_OPTION){
+                }else if(infoPopUpWindow ==JOptionPane.NO_OPTION){
                     bitSizeFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 }
             }
 
         });
+        //FOLDER MENU
         JMenu folders = new JMenu("Folders");
         JMenuItem compressedFolder = new JMenuItem(new AbstractAction("Compressed Files") {
             public void actionPerformed(ActionEvent e) {
@@ -268,6 +282,7 @@ public class LZWGuardGUI {
                 }
             }
         });
+
         bitSize.add(bitSizeChange);
         help.add(quickStart);
         help.add(forgotPassword);
@@ -276,14 +291,12 @@ public class LZWGuardGUI {
         folders.add(compressedFolder);folders.add(DecompressedFolder); folders.add(exampleInputs);
         mainBar.add(folders); mainBar.add(help); mainBar.add(bitSize); mainBar.add(main);
         mainJFrame.setJMenuBar(mainBar);
-        itemCounterLabel.setBounds(640,110, 200,40);
         GuardPassword.setBounds(200,110, 200,40);
-        DnDField.setBounds(100,50, 700,50);
         labelGuard.setBounds(120,110, 100,40);
         checkbox.setBounds(100,120, 20,20);
         mainJFrame.add(DnDField); mainJFrame.add(GuardPassword); mainJFrame.add(mainBar); mainJFrame.add(checkbox); mainJFrame.add(labelGuard);
         mainJFrame.add(compressButton); mainJFrame.add(decompressButton); mainJFrame.add(loading); mainJFrame.add(itemCounterLabel);
-        mainJFrame.setSize(1000,600);
+        mainJFrame.setSize(1000,400);
         mainJFrame.setLayout(null);
         mainJFrame.setVisible(true);
 
