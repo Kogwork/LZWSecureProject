@@ -20,13 +20,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
 public class LZWGuardGUI {
 
+    public static boolean loadingDone = false;
     public static JTextField DnDField = new JTextField(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
     public static JLabel loading = new JLabel();
     public static String FilePath = "";
@@ -38,6 +38,7 @@ public class LZWGuardGUI {
 
         //init the main frame for the gui
         JFrame mainJFrame= new JFrame("Guard LZW");
+
 
         //checks for the nimbus look for the gui
         try {
@@ -99,13 +100,12 @@ public class LZWGuardGUI {
         compressButton.setBounds(150,230,120,30);
         compressButton.addActionListener(e -> {
             loading.setVisible(true);
-            loading.setText("      Compressing...⏳");
-            itemCounter = 0;
             try {
                 Runner.RunCompress();
             } catch (GuardExecption guardExecption) {
                 guardExecption.printStackTrace();
             }
+            itemCounter = 0;
             FilePath = "";
             DnDField.setText(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
         });
@@ -113,17 +113,18 @@ public class LZWGuardGUI {
         JButton decompressButton=new JButton("\uD83D\uDD6E Decompress");
         decompressButton.setBounds(680,230,120,30);
         decompressButton.addActionListener(e -> {
+            loadingDone = false;
             loading.setVisible(true);
-            loading.setText("      Decompressing...⏳");
-            itemCounter = 0;
             try {
                 Runner.RunDecompress();
             } catch (GuardExecption guardExecption) {
                 guardExecption.printStackTrace();
             }
+            itemCounter = 0;
             FilePath = "";
             DnDField.setText(" \uD83D\uDCC2 Drop your file here \uD83D\uDCC2");
         });
+
 
         //Guard checkbox and label
         JLabel labelGuard = new JLabel("\uD83D\uDD12 Guard™");
@@ -173,13 +174,12 @@ public class LZWGuardGUI {
         JMenuItem quickStart = new JMenuItem(new AbstractAction("Quick Start") {
             public void actionPerformed(ActionEvent e) {
                 JFrame quick=new JFrame();
-                JOptionPane.showMessageDialog(quick, """
-                        Thank you for using Guard™!
-                        To compress your files, just drag and drop them in the allocated field.
-                        If you wish to Encrypt them using a password, check the Guard™ checkbox
-                        and choose a password up to 16 digits long, You'll need it to decrypt the files as well
-                        so keep it in a safe place. Encrypted files are ended with .guard
-                        and compressed ones will have .lzw at the end.""","Quick Start",JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(quick,
+                        " Thank you for using Guard™! \nTo compress your files, just drag and drop them in the allocated field." +
+                                " \nIf you wish to Encrypt them using a password, check the Guard™ checkbox " +
+                                "\nand choose a password up to 16 digits long, You'll need it to decrypt the files as well " +
+                                "\nso keep it in a safe place. Encrypted files are ended with .guard " +
+                                "\nand compressed ones will have .lzw at the end.","Quick Start",JOptionPane.PLAIN_MESSAGE);
             }
         });
         JMenuItem forgotPassword = new JMenuItem(new AbstractAction("Forgot Password") {
@@ -194,10 +194,10 @@ public class LZWGuardGUI {
         JMenuItem bitSizeChange = new JMenuItem(new AbstractAction("Change Bit Size") {
             public void actionPerformed(ActionEvent e) {
                 JFrame bitSizeFrame = new JFrame("Change BitSize");
-                int infoPopUpWindow =JOptionPane.showConfirmDialog(bitSizeFrame, """
-                        Changing BitSize will make it impossible to decompress
-                        files compressed with different BitSize, but will allow compressing bigger files,
-                        also may affect compressing times, are you sure?""");
+                bitSizeFrame.setLocationRelativeTo(null);
+                int infoPopUpWindow =JOptionPane.showConfirmDialog(bitSizeFrame, " Changing BitSize will make it impossible to decompress " +
+                                "\nfiles compressed with different BitSize, but will allow compressing bigger files, " +
+                        "\nalso may affect compressing times, are you sure?");
                 if(infoPopUpWindow ==JOptionPane.YES_OPTION){
                     JLabel currentBitSize = new JLabel();
                     JSlider bitSlider;
@@ -245,12 +245,12 @@ public class LZWGuardGUI {
         JMenu folders = new JMenu("Folders");
         JMenuItem compressedFolder = new JMenuItem(new AbstractAction("Compressed Files") {
             public void actionPerformed(ActionEvent e) {
-                File theDir = new File("..\\Protected_LZW_318503257_205580087\\CompressedFiles");
+                File theDir = new File("..\\CompressedFiles");
                 if (!theDir.exists()){
                     theDir.mkdirs();
                 }
                 try {
-                    Runtime.getRuntime().exec("cmd /c start "+ "..\\Protected_LZW_318503257_205580087\\CompressedFiles");
+                    Runtime.getRuntime().exec("cmd /c start "+ "..\\CompressedFiles");
                 } catch (IOException ex) {
                     Logger.getLogger(LZWGuardGUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -258,12 +258,12 @@ public class LZWGuardGUI {
         });
         JMenuItem DecompressedFolder = new JMenuItem(new AbstractAction("Decompressed Files") {
             public void actionPerformed(ActionEvent e) {
-                File theDir = new File("..\\Protected_LZW_318503257_205580087\\DecompressedFiles");
+                File theDir = new File("..\\DecompressedFiles");
                 if (!theDir.exists()){
                     theDir.mkdirs();
                 }
                 try {
-                    Runtime.getRuntime().exec("cmd /c start "+ "..\\Protected_LZW_318503257_205580087\\DecompressedFiles");
+                    Runtime.getRuntime().exec("cmd /c start "+ "..\\DecompressedFiles");
                 } catch (IOException ex) {
                     Logger.getLogger(LZWGuardGUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -271,12 +271,12 @@ public class LZWGuardGUI {
         });
         JMenuItem exampleInputs = new JMenuItem(new AbstractAction("Example Inputs") {
             public void actionPerformed(ActionEvent e) {
-                File theDir = new File("..\\Protected_LZW_318503257_205580087\\ExampleInputs");
+                File theDir = new File("..\\ExampleInputs");
                 if (!theDir.exists()){
                     theDir.mkdirs();
                 }
                 try {
-                    Runtime.getRuntime().exec("cmd /c start "+ "..\\Protected_LZW_318503257_205580087\\ExampleInputs");
+                    Runtime.getRuntime().exec("cmd /c start "+ "..\\ExampleInputs");
                 } catch (IOException ex) {
                     Logger.getLogger(LZWGuardGUI.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -299,6 +299,9 @@ public class LZWGuardGUI {
         mainJFrame.setSize(1000,400);
         mainJFrame.setLayout(null);
         mainJFrame.setVisible(true);
+        mainJFrame.setLocationRelativeTo(null);
+
+        mainJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }
 

@@ -57,6 +57,8 @@ public class LZW_Compressor_Decompressor implements Compressor {
             while (true) {
                 if (nextFreeKeyInHashMap == (Math.pow(2, m_SizeOfDictionaryElementInBits)))
                 {
+                    JFrame bitSizeError = new JFrame();
+                    JOptionPane.showMessageDialog(bitSizeError,"The current BitSize setting is too low for this file.\nTo properly Compress it please increase it in the BitSize menu","Alert",JOptionPane.WARNING_MESSAGE);
                     throw new DictionarySizeError("[COMPRESSING] ERROR DICTIONARY SIZE");
                 }
 
@@ -114,7 +116,6 @@ public class LZW_Compressor_Decompressor implements Compressor {
             try {
                 outputBit.writeBits(8, inputValueCurrent.charAt(0));
             }catch(NullPointerException e){
-                System.out.println("File was compressed with a different bit size.");
             }
 
             while (true)
