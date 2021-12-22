@@ -10,6 +10,6 @@ Java Cipher Class
 Java Swing GUI
 
 
-![Alt text](relative/path/to/Gui Explantion.png?raw=true "Title")
+[Alt text](relative/path/to/Gui Explantion.png?raw=true "Title")
 
 
