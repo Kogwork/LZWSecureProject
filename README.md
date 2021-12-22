@@ -9,5 +9,4 @@ BitInputStream / OutputStream Classes.
 Java Cipher Class
 Java Swing GUI
 
-![Screenshot](Gui Explantion.png)
-
+![Gui Guide](Gui Explantion.png)
